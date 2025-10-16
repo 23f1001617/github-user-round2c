@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub User Lookup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 20px;
+        }
+        .dark {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        .image-caption {
+            text-align: center;
+            margin-top: 5px;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        button {
+            padding: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>GitHub User Lookup</h1>
+<form id="user-form">
+    <input type="text" id="username" placeholder="Enter GitHub username" required>
+    <button type="submit">Lookup</button>
+</form>
+<div id="result"></div>
+<div id="markdown-output"></div>
+
+<button id="toggle-theme">Toggle Theme</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const userForm = document.getElementById('user-form');
+        const usernameInput = document.getElementById('username');
+        const resultDiv = document.getElementById('result');
+        const markdownOutput = document.getElementById('markdown-output');
+        const toggleThemeButton = document.getElementById('toggle-theme');
+
+        // Load last successful lookup from localStorage
+        const lastUser = localStorage.getItem('github-user-42');
+        if (lastUser) {
+            usernameInput.value = lastUser;
+            fetchUserData(lastUser);
+        }
+
+        userForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const username = usernameInput.value;
+            localStorage.setItem('github-user-42', username);
+            fetchUserData(username);
+        });
+
+        function fetchUserData(username) {
+            fetch(`https://api.github.com/users/${username}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch user data.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    resultDiv.innerHTML = `
+                        <h2>${data.name}</h2>
+                        <img src="${data.avatar_url}" alt="${data.name}">
+                        <p>${data.bio || 'No bio available.'}</p>
+                    `;
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<p>${error.message}</p>`;
+                });
+
+            // Load Markdown content
+            fetch('./input.md')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load data.');
+                    }
+                    return response.text();
+                })
+                .then(markdown => {
+                    markdownOutput.innerHTML = markdown.replace(/^(.*)$/gm, '<p>$1</p>');
+                })
+                .catch(error => {
+                    markdownOutput.innerHTML = `<p>${error.message}</p>`;
+                });
+        }
+
+        toggleThemeButton.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+        });
+    });
+</script>
+
+<footer><!-- build-id: 2023-10-01T12:00:00Z --></footer>
+</body>
+</html>
+<!-- build-id: 2025-10-16T12:58:26.636262 -->
